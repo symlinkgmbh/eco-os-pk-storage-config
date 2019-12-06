@@ -17,28 +17,30 @@
 
 
 
-import { STORAGE_TYPES, storageContainer } from "@symlinkde/eco-os-pk-storage";
+import { STORAGE_TYPES, storageContainer, AbstractBindings } from "@symlinkde/eco-os-pk-storage";
 import { bootstrapperContainer } from "@symlinkde/eco-os-pk-core";
 import Config from "config";
 import { PkStorage, PkStorageConfig, MsConf } from "@symlinkde/eco-os-pk-models";
 import { injectable } from "inversify";
 
 @injectable()
-export class ConfigService implements PkStorageConfig.IConfigService {
+export class ConfigService extends AbstractBindings implements PkStorageConfig.IConfigService {
   private configRepro: PkStorage.IMongoRepository<MsConf.IConfig>;
 
   public constructor() {
-    storageContainer.bind(STORAGE_TYPES.Collection).toConstantValue(Config.get("mongo.collection"));
-    storageContainer.bind(STORAGE_TYPES.Database).toConstantValue(Config.get("mongo.db"));
-    storageContainer
-      .bind(STORAGE_TYPES.StorageTarget)
-      .toConstantValue(
-        process.env.SECONDLOCK_MONGO_CONF_DATA === undefined ? "" : process.env.SECONDLOCK_MONGO_CONF_DATA,
-      );
-    storageContainer
-      .bind(STORAGE_TYPES.SECONDLOCK_REGISTRY_URI)
-      .toConstantValue(bootstrapperContainer.get("SECONDLOCK_REGISTRY_URI"));
-    this.configRepro = storageContainer.getTagged<PkStorage.IMongoRepository<MsConf.IConfig>>(
+    super(storageContainer);
+
+    this.initDynamicBinding(
+      [STORAGE_TYPES.Database, STORAGE_TYPES.Collection, STORAGE_TYPES.StorageTarget],
+      [Config.get("mongo.db"), Config.get("mongo.collection"), process.env.SECONDLOCK_MONGO_CONF_DATA],
+    );
+
+    this.initStaticBinding(
+      [STORAGE_TYPES.SECONDLOCK_REGISTRY_URI],
+      [bootstrapperContainer.get("SECONDLOCK_REGISTRY_URI")],
+    );
+
+    this.configRepro = this.getContainer().getTagged<PkStorage.IMongoRepository<MsConf.IConfig>>(
       STORAGE_TYPES.IMongoRepository,
       STORAGE_TYPES.STATE_LESS,
       true,

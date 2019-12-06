@@ -1,6 +1,6 @@
 {
   "name": "@symlinkde/eco-os-pk-storage-config",
-  "version": "0.0.39",
+  "version": "0.0.41",
   "description": "Package containing storage adapter for config service.",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
